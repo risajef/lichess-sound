@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#111820">
+    <title>Lichess Clock Companion</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <main class="shell">
+      <header class="masthead">
+        <p class="eyebrow">LICHESS CLOCK COMPANION</p>
+        <h1>Hör auf deine Uhr.</h1>
+        <p class="intro">Ein akustischer Begleiter für deine laufenden Lichess-Partien.</p>
+      </header>
+
+      <section class="panel connection-panel" aria-labelledby="connection-title">
+        <div class="section-heading">
+          <div>
+            <p class="step">SCHRITT 1</p>
+            <h2 id="connection-title">Mit Lichess verbinden</h2>
+          </div>
+          <span class="lock-mark" aria-hidden="true">↗</span>
+        </div>
+
+        <p class="body-copy">Erstelle einen persönlichen API-Token mit der Berechtigung <code>board:play</code> und füge ihn hier ein.</p>
+        <a class="text-link" href="https://lichess.org/account/oauth/token/create" target="_blank" rel="noreferrer">API-Token bei Lichess erstellen <span aria-hidden="true">↗</span></a>
+
+        <form id="connection-form" class="connection-form">
+          <label for="api-token">Dein API-Token</label>
+          <div class="token-row">
+            <input id="api-token" name="token" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" required aria-describedby="token-help" placeholder="Token hier einfügen">
+            <button id="connect-button" class="button button-primary" type="submit">Verbinden</button>
+          </div>
+          <p id="token-help" class="field-help">Der Token wird nicht gespeichert. Dein Browser verbindet sich direkt mit lichess.org.</p>
+        </form>
+
+        <p id="connection-status" class="status-line" role="status" aria-live="polite">Noch nicht verbunden.</p>
+      </section>
+
+      <section id="monitor-panel" class="panel monitor-panel" aria-labelledby="monitor-title" hidden>
+        <div class="section-heading monitor-heading">
+          <div>
+            <p class="step">SCHRITT 2</p>
+            <h2 id="monitor-title">Uhrensignal</h2>
+          </div>
+          <span id="connection-indicator" class="connection-indicator"><span aria-hidden="true"></span> Verbunden</span>
+        </div>
+
+        <div id="game-picker" class="game-picker" hidden>
+          <label for="game-select">Laufende Partie auswählen</label>
+          <div class="picker-row">
+            <select id="game-select"></select>
+            <button id="watch-game-button" class="button button-secondary" type="button">Überwachen</button>
+          </div>
+        </div>
+
+        <form id="seek-form" class="seek-panel">
+          <div class="seek-heading">
+            <div>
+              <p class="summary-label">NEUE PARTIE</p>
+              <h3>Gegner suchen</h3>
+            </div>
+            <span class="seek-icon" aria-hidden="true">↗</span>
+          </div>
+          <p class="seek-description">Lichess sucht einen zufälligen Gegner. Wenn die Partie startet, kannst du sie im normalen Lichess-Brett spielen.</p>
+          <div class="seek-options">
+            <div>
+              <label for="time-control">Bedenkzeit</label>
+              <select id="time-control">
+                <option value="10:0">Rapid · 10 + 0</option>
+                <option value="10:5">Rapid · 10 + 5</option>
+                <option value="15:10">Rapid · 15 + 10</option>
+                <option value="30:0">Classical · 30 + 0</option>
+                <option value="30:20">Classical · 30 + 20</option>
+              </select>
+            </div>
+            <label class="rated-option" for="rated-game">
+              <input id="rated-game" type="checkbox">
+              Wertungsspiel
+            </label>
+          </div>
+          <div class="seek-actions">
+            <button id="find-opponent" class="button button-secondary" type="submit">Gegner suchen</button>
+            <button id="cancel-seek" class="button button-quiet" type="button" hidden>Suche stoppen</button>
+          </div>
+          <p id="seek-status" class="seek-status" role="status" aria-live="polite">Die Suche startet erst, wenn du auf „Gegner suchen“ klickst.</p>
+        </form>
+
+        <div id="game-summary" class="game-summary" hidden>
+          <div>
+            <span class="summary-label">PARTIE</span>
+            <p id="opponent-name" class="opponent-name">Warte auf eine Partie</p>
+          </div>
+          <span id="player-color" class="color-pill"></span>
+        </div>
+        <a id="open-game-link" class="open-game-link" href="#" target="_blank" rel="noreferrer" hidden>Partie im Lichess-Brett öffnen <span aria-hidden="true">↗</span></a>
+
+        <div class="clocks" aria-label="Verbleibende Bedenkzeit">
+          <article id="own-clock-card" class="clock-card clock-own">
+            <div class="clock-label-row"><span class="clock-dot" aria-hidden="true"></span><h3>Deine Zeit</h3></div>
+            <p id="own-clock" class="clock-value" aria-live="off">--:--</p>
+            <div class="clock-track" aria-hidden="true"><span id="own-clock-fill"></span></div>
+          </article>
+          <article class="clock-card clock-opponent">
+            <div class="clock-label-row"><span class="clock-dot" aria-hidden="true"></span><h3>Gegnerische Zeit</h3></div>
+            <p id="opponent-clock" class="clock-value" aria-live="off">--:--</p>
+            <div class="clock-track" aria-hidden="true"><span id="opponent-clock-fill"></span></div>
+          </article>
+        </div>
+
+        <p id="game-status" class="game-status" role="status" aria-live="polite">Noch keine Partie ausgewählt.</p>
+
+        <div class="sound-controls">
+          <div class="sound-control-buttons">
+            <button id="sound-toggle" class="button button-primary" type="button" disabled>Signal pausieren</button>
+            <button id="test-sound" class="button button-quiet" type="button" disabled>Signal anhören</button>
+            <button id="disconnect-button" class="button button-quiet" type="button">Trennen</button>
+          </div>
+          <div class="volume-control">
+            <label for="volume">Lautstärke</label>
+            <input id="volume" type="range" min="5" max="70" value="28">
+          </div>
+        </div>
+
+        <details class="sound-explainer">
+          <summary>Was bedeuten die Töne?</summary>
+          <p>Jedes Signal besteht aus zwei Tönen: zuerst deine Uhr, dann die Uhr deines Gegners. Je höher der Ton, desto mehr Zeit zeigt diese Uhr. Die Signale kommen schneller, wenn deine eigene Restzeit knapp wird.</p>
+        </details>
+      </section>
+
+      <footer class="footnote">
+        <span class="footnote-mark" aria-hidden="true">i</span>
+        <p>Der Client liest Kontoname, Partien und Uhrdaten über die offizielle Lichess-API. Erst wenn du „Gegner suchen“ anklickst, stellt er eine öffentliche Gegnersuche ein. Er spielt keine Züge.</p>
+      </footer>
+    </main>
+  </body>
+</html>

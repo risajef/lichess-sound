@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "Lichess Clock Tones",
+  "version": "1.0.0",
+  "description": "Liest die sichtbaren Lichess-Uhren vor und macht Restzeit per Ton hörbar.",
+  "content_scripts": [
+    {
+      "matches": ["https://lichess.org/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
